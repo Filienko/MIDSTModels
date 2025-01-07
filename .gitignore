@@ -5,6 +5,7 @@ synth_pipeline/
 __pycache__/
 *.py[cod]
 *$py.class
+tabddpm_white_box/
 
 # C extensions
 *.so
