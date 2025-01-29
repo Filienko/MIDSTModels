@@ -20,12 +20,14 @@ class ChallengeDataset(Dataset):
         x = self.challenge_points.iloc[idx].to_numpy()
         return torch.from_numpy(x)
 
-def get_challenge_points(base_dir: Path) -> torch.Tensor: 
+def get_challenge_points(base_dir: Path) -> torch.Tensor:
     dataset = ChallengeDataset(base_dir)
 
     loader = DataLoader(dataset, batch_size=200)
     challenge_points = next(iter(loader))
 
-    return challenge_points
+    # Remove the first two columns with ids
+    challenge_points = challenge_points[:, 2:]
 
+    return challenge_points
 

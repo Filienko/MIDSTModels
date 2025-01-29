@@ -104,10 +104,22 @@ def clava_load_pretrained(relation_order, save_dir):
         )
         print(f"{parent} -> {child} checkpoint found, loading...")
         with open(os.path.join(save_dir, f"models/{parent}_{child}_ckpt.pkl"), "rb") as f:
-            models[(parent, child)] = CustomUnpickler(f).load()
-       
+            # models[(parent, child)] = CustomUnpickler(f).load()
+            checkpoint = torch.load(f, map_location=torch.device('cpu'))
+            models[(None, "trans")] = checkpoint
+
     return models
 
+def tabddpm_whitebox_load_pretrained(save_dir):
+    models = {}
+    assert os.path.exists(
+        os.path.join(save_dir, f"None_trans_ckpt.pkl")
+    )
+    print(f"Checkpoint found, loading...")
+    with open(os.path.join(save_dir, f"None_trans_ckpt.pkl"), "rb") as f:
+        models[(None, "trans")] = CustomUnpickler(f).load()
+       
+    return models
 
 def clava_synthesizing(
     tables,
