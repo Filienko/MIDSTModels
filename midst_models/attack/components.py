@@ -100,8 +100,7 @@ class PIA(DDIMAttacker):
         self.lp = lp
 
     def distance(self, x0, x1):
-        # Modified to handle 2D tabular data
-        return ((x0 - x1).abs()**self.lp).sum(dim=-1)
+        return ((x0 - x1).abs()**self.lp).flatten(1).sum(dim=-1)
 
     def ddim_reverse(self, x0, condition):
         intermediates = []
@@ -129,7 +128,7 @@ class PIAN(DDIMAttacker):
         self.lp = lp
 
     def distance(self, x0, x1):
-        return ((x0 - x1).abs()**self.lp).sum(dim=-1)
+        return ((x0 - x1).abs()**self.lp).flatten(1).sum(dim=-1)
 
     def ddim_reverse(self, x0, condition):
         intermediates = []
