@@ -100,7 +100,11 @@ class PIA(DDIMAttacker):
         self.lp = lp
 
     def distance(self, x0, x1):
-        return ((x0 - x1).abs()**self.lp).flatten(1).sum(dim=-1)
+        # print("x0", x0)
+        # print("x1", x1)
+        distance = ((x0 - x1).abs()**self.lp).flatten(1).sum(dim=-1)
+        print("distance", distance)
+        return distance
 
     def ddim_reverse(self, x0, condition):
         intermediates = []

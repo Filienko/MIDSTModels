@@ -31,3 +31,11 @@ def get_challenge_points(base_dir: Path) -> torch.Tensor:
 
     return challenge_points
 
+
+def get_challenge_labels(base_dir: Path) -> torch.Tensor:
+    challenge_labels_path = os.path.join(base_dir, "challenge_label.csv")
+    if not os.path.exists: raise FileNotFoundError(f"Challenge Points Path: {challenge_labels_path} not found.")
+    challenge_labels = pd.read_csv(challenge_labels_path)
+
+    return challenge_labels
+
