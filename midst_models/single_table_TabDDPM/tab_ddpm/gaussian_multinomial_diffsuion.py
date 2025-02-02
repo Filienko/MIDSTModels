@@ -1062,13 +1062,13 @@ class GaussianMultinomialDiffusion(torch.nn.Module):
         y = torch.multinomial(y_dist, num_samples=b, replacement=True)
         out_dict = {"y": y.long().to(device)}
         saved_outputs = {}
-        for i in reversed(range(0, 1000)):
+        for i in reversed(range(0, 1001)):
             print(f"Sample timestep for sample {i:4d}", end="\r")
             t = torch.full((b,), i, device=device, dtype=torch.long)
             model_out = self._denoise_fn(
                 torch.cat([z_norm, log_z], dim=1).float(), t, **out_dict
             )
-            if i in [0, 200, 1000]:
+            if i in [0, 200, 400, 600, 800, 1000]:
                 saved_outputs[i] = model_out.clone().detach().cpu()
 
             model_out_num = model_out[:, : self.num_numerical_features]
@@ -1083,7 +1083,7 @@ class GaussianMultinomialDiffusion(torch.nn.Module):
             )["sample"]
             if has_cat:
                 log_z = self.p_sample(model_out_cat, log_z, t, out_dict)
-        torch.save(saved_outputs, "saved_outputs_0_200.pth")
+        torch.save(saved_outputs, "saved_outputs_0_200_1000.pth")
 
         print()
         z_ohe = torch.exp(log_z).round()

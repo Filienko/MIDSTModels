@@ -12,10 +12,10 @@ class EpsGetter:
         
         batch_size = xt.shape[0]
         t_tensor = torch.ones((batch_size,), device=xt.device, dtype=torch.long) * t
-        
+
         diffusion = self.model[(None, 'trans')]['diffusion']
         eps_pred = diffusion._denoise_fn(xt, t_tensor)
-        
+
         return eps_pred
     
     def get_eps_and_var(self, xt: torch.Tensor, t: int) -> tuple:
