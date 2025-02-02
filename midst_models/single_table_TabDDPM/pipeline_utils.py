@@ -353,7 +353,7 @@ def pipeline_process_data(name, data_df, info, ratio=0.9, save=False, verbose=Tr
     return data, info
 
 
-def load_multi_table(data_dir, verbose=True):
+def load_multi_table(data_dir, verbose=True, train_data="train"):
     dataset_meta = json.load(open(os.path.join(data_dir, "dataset_meta.json"), "r"))
 
     relation_order = dataset_meta["relation_order"]
@@ -362,8 +362,8 @@ def load_multi_table(data_dir, verbose=True):
     tables = {}
 
     for table, meta in dataset_meta["tables"].items():
-        if os.path.exists(os.path.join(data_dir, "train.csv")):
-            train_df = pd.read_csv(os.path.join(data_dir, "train.csv"))
+        if os.path.exists(os.path.join(data_dir, f"{train_data}.csv")):
+            train_df = pd.read_csv(os.path.join(data_dir, f"{train_data}.csv"))
         else:
             train_df = pd.read_csv(os.path.join(data_dir, f"{table}.csv"))
         tables[table] = {
