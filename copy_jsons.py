@@ -4,13 +4,14 @@ import glob
 import pandas as pd
 
 # Define source files (JSON files to copy)
-source_folder = r"C:\Users\ksush\attacks\MIDSTModels\tabddpm_white_box\train\tabddpm_1"
+source_folder = r"C:\Users\ksush\attacks\MIDSTModels\midst_models\single_table_TabDDPM\configs"
 source_files = ["trans.json", "dataset_meta.json", "trans_domain.json"]
 
 # Define destination parent directories
 dest_folders = [
-    r"C:\Users\ksush\attacks\MIDSTModels\tabddpm_white_box\dev",
-    r"C:\Users\ksush\attacks\MIDSTModels\tabddpm_white_box\final"
+    r"C:\Users\ksush\attacks\MIDSTModels\tabddpm_white_box\train",
+    # r"C:\Users\ksush\attacks\MIDSTModels\tabddpm_white_box\dev",
+    # r"C:\Users\ksush\attacks\MIDSTModels\tabddpm_white_box\final"
 ]
 
 # Iterate through each destination folder

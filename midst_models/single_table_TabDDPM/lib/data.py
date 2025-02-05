@@ -149,6 +149,29 @@ class Dataset:
             part_metrics["score"] = score_sign * part_metrics[score_key]
         return metrics
 
+    def head(self, part: str = "train", n: int = 5) -> Dict[str, np.ndarray]:
+        """
+        Returns the first `n` samples from the specified dataset split.
+
+        Args:
+            part (str): The dataset split to preview ('train', 'val', or 'test').
+            n (int): The number of samples to return.
+
+        Returns:
+            Dict[str, np.ndarray]: A dictionary containing the first `n` samples 
+                                   of numerical features, categorical features, and labels.
+        """
+        if part not in self.y:
+            raise ValueError(f"Invalid dataset part: {part}. Choose from {list(self.y.keys())}")
+
+        preview = {}
+        if self.X_num is not None:
+            preview["X_num"] = self.X_num[part][:n]
+        if self.X_cat is not None:
+            preview["X_cat"] = self.X_cat[part][:n]
+        preview["y"] = self.y[part][:n]
+
+        return preview
 
 def change_val(dataset: Dataset, val_size: float = 0.2):
     # should be done before transformations
@@ -633,7 +656,7 @@ def prepare_fast_dataloader(
     else:
         y = torch.from_numpy(D.y[split]).long()
     dataloader = FastTensorDataLoader(
-        X, y, batch_size=batch_size, shuffle=(split == "train")
+        X, y, batch_size=batch_size, shuffle=False  # (split == "train")
     )
     while True:
         yield from dataloader

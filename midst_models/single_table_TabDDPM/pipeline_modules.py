@@ -150,7 +150,7 @@ def child_attacking(
         }
     )
     child_T_dict = get_T_dict()
-
+    print("Attacking child model")
     attack_model(
         child_df_with_cluster,
         child_info,

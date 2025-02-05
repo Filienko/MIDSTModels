@@ -440,7 +440,7 @@ def sample_from_diffusion(
     num_numerical_features = (
         dataset.X_num["train"].shape[1] if dataset.X_num is not None else 0
     )
-
+    print("WARNING: dataset:", dataset)
     K = np.array(dataset.get_category_sizes("train"))
     if len(K) == 0 or T_dict["cat_encoding"] == "one-hot":
         K = np.array([0])
@@ -455,6 +455,7 @@ def sample_from_diffusion(
     x_gen, y_gen = diffusion.sample_all(
         sample_size, sample_batch_size, empirical_class_dist.float(), ddim=False, save_distances=save_distances, attacker=attacker
     )
+
     X_gen, y_gen = x_gen.numpy(), y_gen.numpy()
     num_numerical_features_sample = num_numerical_features + int(
         dataset.is_regression and not model_params["is_y_cond"]
@@ -634,6 +635,8 @@ def attack_model(
     save_dir=None
 ):
     T = Transformations(**T_dict)
+    print("T_dict",T_dict)
+    # Modified to ensure that the train_df is actually whole df.
     dataset, _, _ = make_dataset_from_df(
         df,
         T,
@@ -642,10 +645,12 @@ def attack_model(
         df_info=df_info,
         std=0,
     )
-    
+    print("df.shape", df.shape)
+    # print("dataset.head():", dataset.head())
+
     # print(dataset.n_features)
     train_loader = prepare_fast_dataloader(
-        dataset, split="train", batch_size=batch_size, y_type="long"
+        dataset, split="train", batch_size=1, y_type="long"
     )
 
     num_numerical_features = (
@@ -664,7 +669,7 @@ def attack_model(
     model.to(device)
 
     train_loader = prepare_fast_dataloader(
-        dataset, split="train", batch_size=batch_size
+        dataset, split="train", batch_size=1
     )
 
     diffusion = GaussianMultinomialDiffusion(

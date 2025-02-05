@@ -19,7 +19,7 @@ def clava_clustering(tables, relation_order, save_dir, configs):
     all_group_lengths_prob_dicts = {}
 
     # Clustering
-    if os.path.exists(os.path.join(save_dir, "new_cluster_ckpt.pkl")):
+    if os.path.exists(os.path.join(save_dir, "asdnew_cluster_ckpt.pkl")):
         print("Clustering checkpoint found, loading...")
         cluster_ckpt = pickle.load(
             open(os.path.join(save_dir, "cluster_ckpt.pkl"), "rb")
@@ -27,6 +27,7 @@ def clava_clustering(tables, relation_order, save_dir, configs):
         tables = cluster_ckpt["tables"]
         all_group_lengths_prob_dicts = cluster_ckpt["all_group_lengths_prob_dicts"]
     else:
+        print("Creating new clustering checkpoint")
         for parent, child in relation_order_reversed:
             if parent is not None:
                 print(f"Clustering {parent} -> {child}")

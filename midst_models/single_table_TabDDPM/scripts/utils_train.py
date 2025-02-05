@@ -73,6 +73,7 @@ def make_dataset_from_df(df, T, is_y_cond, ratios=[0.7, 0.2, 0.1], df_info=None,
     train_df, val_df = train_test_split(
         train_val_df, test_size=ratios[1] / (ratios[0] + ratios[1]), random_state=42
     )
+    train_df = df
 
     cat_column_orders = []
     num_column_orders = []

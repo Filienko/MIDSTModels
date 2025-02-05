@@ -753,9 +753,11 @@ class GaussianMultinomialDiffusion(torch.nn.Module):
             log_x_cat_t = self.q_sample(log_x_start=log_x_cat, t=t)
 
         x_in = torch.cat([x_num_t, log_x_cat_t], dim=1)
-        
+
         # distance = attacker(x)
+        # print("x_in", x_in.shape)
         distance = attacker(x_in)
+        print("distance.shape", distance.shape)
 
         return distance
 
