@@ -8,6 +8,7 @@ import math
 import numpy as np
 import torch
 import torch.nn.functional as F
+import os
 
 from .utils import *
 
@@ -734,6 +735,31 @@ class GaussianMultinomialDiffusion(torch.nn.Module):
 
         return loss_multi.mean(), loss_gauss.mean()
 
+    def attack(self, x, attacker):
+        b = x.shape[0]
+        device = x.device
+        t, _ = self.sample_time(b, device, "uniform")
+
+        x_num = x[:, : self.num_numerical_features]
+        x_cat = x[:, self.num_numerical_features :]
+
+        x_num_t = x_num
+        log_x_cat_t = x_cat
+        if x_num.shape[1] > 0:
+            noise = torch.randn_like(x_num)
+            x_num_t = self.gaussian_q_sample(x_num, t, noise=noise)
+        if x_cat.shape[1] > 0:
+            log_x_cat = index_to_log_onehot(x_cat.long(), self.num_classes)
+            log_x_cat_t = self.q_sample(log_x_start=log_x_cat, t=t)
+
+        x_in = torch.cat([x_num_t, log_x_cat_t], dim=1)
+        
+        # distance = attacker(x)
+        distance = attacker(x_in)
+
+        return distance
+
+
     @torch.no_grad()
     def mixed_elbo(self, x0, out_dict):
         b = x0.size(0)
@@ -1046,7 +1072,7 @@ class GaussianMultinomialDiffusion(torch.nn.Module):
         return sample, out_dict
 
     @torch.no_grad()
-    def sample(self, num_samples, y_dist, model_kwargs=None, cond_fn=None):
+    def sample(self, num_samples, y_dist, model_kwargs=None, cond_fn=None, save_distances='.', attacker=None):
         b = num_samples
         device = self.log_alpha.device
         z_norm = torch.randn((b, self.num_numerical_features), device=device)
@@ -1062,13 +1088,13 @@ class GaussianMultinomialDiffusion(torch.nn.Module):
         y = torch.multinomial(y_dist, num_samples=b, replacement=True)
         out_dict = {"y": y.long().to(device)}
         saved_outputs = {}
-        for i in reversed(range(0, 1001)):
+        for i in reversed(range(0, self.num_timesteps)):
             print(f"Sample timestep for sample {i:4d}", end="\r")
             t = torch.full((b,), i, device=device, dtype=torch.long)
             model_out = self._denoise_fn(
                 torch.cat([z_norm, log_z], dim=1).float(), t, **out_dict
             )
-            if i in [0, 200, 400, 600, 800, 1000]:
+            if i in [0, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 1999]:
                 saved_outputs[i] = model_out.clone().detach().cpu()
 
             model_out_num = model_out[:, : self.num_numerical_features]
@@ -1083,7 +1109,7 @@ class GaussianMultinomialDiffusion(torch.nn.Module):
             )["sample"]
             if has_cat:
                 log_z = self.p_sample(model_out_cat, log_z, t, out_dict)
-        torch.save(saved_outputs, "saved_outputs_0_200_1000.pth")
+        torch.save(saved_outputs, os.path.join(save_distances, "saved_outputs_0_200_1000.pth"))
 
         print()
         z_ohe = torch.exp(log_z).round()
@@ -1101,6 +1127,8 @@ class GaussianMultinomialDiffusion(torch.nn.Module):
         ddim=False,
         model_kwargs=None,
         cond_fn=None,
+        save_distances='.',
+        attacker=None
     ):
         if ddim:
             print("Sample using DDIM.")
@@ -1115,7 +1143,7 @@ class GaussianMultinomialDiffusion(torch.nn.Module):
         num_generated = 0
         while num_generated < num_samples:
             sample, out_dict = sample_fn(
-                b, y_dist, model_kwargs=model_kwargs, cond_fn=cond_fn
+                b, y_dist, model_kwargs=model_kwargs, cond_fn=cond_fn, save_distances=save_distances, attacker=attacker
             )
             mask_nan = torch.any(sample.isnan(), dim=1)
             sample = sample[~mask_nan]

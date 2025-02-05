@@ -42,6 +42,7 @@ data/CEHR-BERT_sample_patient_sequence.parquet
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
+*.pth
 
 # Unit test / coverage reports
 htmlcov/

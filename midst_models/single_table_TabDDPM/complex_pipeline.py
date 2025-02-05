@@ -19,7 +19,7 @@ def clava_clustering(tables, relation_order, save_dir, configs):
     all_group_lengths_prob_dicts = {}
 
     # Clustering
-    if os.path.exists(os.path.join(save_dir, "cluster_ckpt.pkl")):
+    if os.path.exists(os.path.join(save_dir, "new_cluster_ckpt.pkl")):
         print("Clustering checkpoint found, loading...")
         cluster_ckpt = pickle.load(
             open(os.path.join(save_dir, "cluster_ckpt.pkl"), "rb")
@@ -89,6 +89,17 @@ def clava_training(tables, relation_order, save_dir, configs):
 
     return models
 
+def clava_attacking(tables, relation_order, save_dir, configs, attacker=None, model=None):
+    for parent, child in relation_order:
+        print(f"Attacking {parent} -> {child}")
+        df_with_cluster = tables[child]["df"]
+        id_cols = [col for col in df_with_cluster.columns if "_id" in col]
+        df_without_id = df_with_cluster.drop(columns=id_cols)
+        child_attacking(
+            df_without_id, tables[child]["domain"], parent, child, configs, attacker=attacker, model=model,save_dir=save_dir
+        )
+
+
 class CustomUnpickler(pickle.Unpickler):
     def find_class(self, module, name):
         if module.startswith("midst_competition.single_table_ClavaDDPM"):
@@ -129,6 +140,8 @@ def clava_synthesizing(
     models,
     configs,
     sample_scale=1,
+    save_distances='.',
+    attacker=None
 ):
     synthesizing_start_time = time.time()
     synthetic_tables = {}
@@ -141,7 +154,8 @@ def clava_synthesizing(
         df_without_id = get_df_without_id(df_with_cluster)
 
         print("Sample size: {}".format(int(sample_scale * len(df_without_id))))
-
+        print('result', result)
+        print('result["dataset"]', result["dataset"])
         if parent is None:
             _, child_generated = sample_from_diffusion(
                 df=df_without_id,
@@ -153,6 +167,8 @@ def clava_synthesizing(
                 model_params=result["model_params"],
                 T_dict=result["T_dict"],
                 sample_batch_size=configs["sampling"]["batch_size"],
+                save_distances=save_distances,
+                attacker=attacker
             )
             child_keys = list(range(len(child_generated)))
             generated_final_arr = np.concatenate(

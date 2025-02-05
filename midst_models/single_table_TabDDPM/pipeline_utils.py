@@ -13,6 +13,7 @@ from sklearn.preprocessing import MinMaxScaler, QuantileTransformer
 from tqdm import tqdm
 
 from .scripts.train import Trainer
+from .scripts.attack import Attacker
 from .scripts.utils_train import get_model, make_dataset_from_df
 from .tab_ddpm import GaussianMultinomialDiffusion, logger
 from .tab_ddpm.modules import timestep_embedding
@@ -360,11 +361,14 @@ def load_multi_table(data_dir, verbose=True, train_data="train"):
     relation_order_reversed = relation_order[::-1]
 
     tables = {}
+    print(f"Loading {train_data}.csv")
 
     for table, meta in dataset_meta["tables"].items():
         if os.path.exists(os.path.join(data_dir, f"{train_data}.csv")):
+            print(f"YES, Loading {train_data}.csv")
             train_df = pd.read_csv(os.path.join(data_dir, f"{train_data}.csv"))
         else:
+            print(f"NOT, Loading {table}.csv")
             train_df = pd.read_csv(os.path.join(data_dir, f"{table}.csv"))
         tables[table] = {
             "df": train_df,
@@ -430,6 +434,8 @@ def sample_from_diffusion(
     model_params,
     T_dict,
     sample_batch_size=8192,
+    save_distances='.',
+    attacker=None,
 ):
     num_numerical_features = (
         dataset.X_num["train"].shape[1] if dataset.X_num is not None else 0
@@ -447,7 +453,7 @@ def sample_from_diffusion(
         torch.from_numpy(dataset.y["train"]), return_counts=True
     )
     x_gen, y_gen = diffusion.sample_all(
-        sample_size, sample_batch_size, empirical_class_dist.float(), ddim=False
+        sample_size, sample_batch_size, empirical_class_dist.float(), ddim=False, save_distances=save_distances, attacker=attacker
     )
     X_gen, y_gen = x_gen.numpy(), y_gen.numpy()
     num_numerical_features_sample = num_numerical_features + int(
@@ -613,6 +619,73 @@ def train_model(
         "dataset": dataset,
         "column_orders": column_orders,
     }
+
+def attack_model(
+    df,
+    df_info,
+    model_params,
+    T_dict,
+    steps,
+    batch_size,
+    num_timesteps,
+    device="cuda",
+    attacker=None,
+    model=None,
+    save_dir=None
+):
+    T = Transformations(**T_dict)
+    dataset, _, _ = make_dataset_from_df(
+        df,
+        T,
+        is_y_cond=model_params["is_y_cond"],
+        ratios=[0.99, 0.005, 0.005],
+        df_info=df_info,
+        std=0,
+    )
+    
+    # print(dataset.n_features)
+    train_loader = prepare_fast_dataloader(
+        dataset, split="train", batch_size=batch_size, y_type="long"
+    )
+
+    num_numerical_features = (
+        dataset.X_num["train"].shape[1] if dataset.X_num is not None else 0
+    )
+
+    K = np.array(dataset.get_category_sizes("train"))
+    if len(K) == 0 or T_dict["cat_encoding"] == "one-hot":
+        K = np.array([0])
+    # print(K)
+
+    num_numerical_features = (
+        dataset.X_num["train"].shape[1] if dataset.X_num is not None else 0
+    )
+    device = "cpu"
+    model.to(device)
+
+    train_loader = prepare_fast_dataloader(
+        dataset, split="train", batch_size=batch_size
+    )
+
+    diffusion = GaussianMultinomialDiffusion(
+        num_classes=K,
+        num_numerical_features=num_numerical_features,
+        denoise_fn=model,
+        num_timesteps=num_timesteps,
+        device=device,
+    )
+    diffusion.to(device)
+
+    attacker = Attacker(
+        diffusion,
+        train_loader,
+        steps=steps,
+        device=device,
+        attacker=attacker,
+        save_dir=save_dir,
+    )
+    attacker.run_attack()
+
 
 
 class Classifier(nn.Module):

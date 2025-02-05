@@ -134,6 +134,37 @@ def child_training(
     child_result["T_dict"] = child_T_dict
     return child_result
 
+def child_attacking(
+    child_df_with_cluster, child_domain_dict, parent_name, child_name, configs, attacker=None, model=None, save_dir=None
+):
+    if parent_name is None:
+        y_col = "placeholder"
+        child_df_with_cluster["placeholder"] = list(range(len(child_df_with_cluster)))
+    else:
+        y_col = f"{parent_name}_{child_name}_cluster"
+    child_info = get_table_info(child_df_with_cluster, child_domain_dict, y_col)
+    child_model_params = get_model_params(
+        {
+            "d_layers": configs["diffusion"]["d_layers"],
+            "dropout": configs["diffusion"]["dropout"],
+        }
+    )
+    child_T_dict = get_T_dict()
+
+    attack_model(
+        child_df_with_cluster,
+        child_info,
+        child_model_params,
+        child_T_dict,
+        configs["diffusion"]["iterations"],
+        configs["diffusion"]["batch_size"],
+        configs["diffusion"]["num_timesteps"],
+        attacker=attacker,
+        model=model,
+        save_dir=save_dir
+    )
+
+
 
 def pair_clustering_keep_id(
     child_df,
