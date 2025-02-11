@@ -156,7 +156,7 @@ def clava_synthesizing(
 
         print("Sample size: {}".format(int(sample_scale * len(df_without_id))))
         print('result', result)
-        print('result["dataset"]', result["dataset"])
+        # print('result["dataset"]', result["dataset"])
         if parent is None:
             _, child_generated = sample_from_diffusion(
                 df=df_without_id,

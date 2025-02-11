@@ -23,7 +23,7 @@ class Attacker:
         self.save_dir = save_dir
             
     def run_attack(self):
-        self.steps = 200
+        self.steps = 1
         print(f"Running attack for {self.steps} steps")
         step = 0
         saved_outputs = []

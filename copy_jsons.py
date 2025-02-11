@@ -28,8 +28,8 @@ for parent in dest_folders:
             print(f"Copied {file} to {dest_path}")
         
         # Process challenge_with_id.csv in the current folder
-        csv_source = os.path.join(folder, "challenge_with_id.csv")
-        csv_dest = os.path.join(folder, "challenge.csv")
+        csv_source = os.path.join(folder, "train_with_id.csv")
+        csv_dest = os.path.join(folder, "train.csv")
         
         if os.path.exists(csv_source):
             train_w_id_df = pd.read_csv(csv_source)

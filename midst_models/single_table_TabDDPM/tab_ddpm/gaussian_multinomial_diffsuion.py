@@ -754,9 +754,9 @@ class GaussianMultinomialDiffusion(torch.nn.Module):
 
         x_in = torch.cat([x_num_t, log_x_cat_t], dim=1)
 
-        # distance = attacker(x)
+        distance = attacker(x)
         # print("x_in", x_in.shape)
-        distance = attacker(x_in)
+        # distance = attacker(x_in)
         print("distance.shape", distance.shape)
 
         return distance

@@ -650,7 +650,7 @@ def attack_model(
 
     # print(dataset.n_features)
     train_loader = prepare_fast_dataloader(
-        dataset, split="train", batch_size=1, y_type="long"
+        dataset, split="train", batch_size=batch_size, y_type="long"
     )
 
     num_numerical_features = (
@@ -666,10 +666,11 @@ def attack_model(
         dataset.X_num["train"].shape[1] if dataset.X_num is not None else 0
     )
     device = "cpu"
+    # model = model['diffusion']._denoise_fn
     model.to(device)
 
     train_loader = prepare_fast_dataloader(
-        dataset, split="train", batch_size=1
+        dataset, split="train", batch_size=batch_size
     )
 
     diffusion = GaussianMultinomialDiffusion(
